@@ -10,18 +10,25 @@ const countdownSeconds = ref(0)
 const countdownActive = ref(false)
 
 // 輸入資料
-const inputHour = ref('09')
-const inputMinute = ref('00')
-const inputSecond = ref('00')
+const inputStartHour = ref('09')
+const inputStartMinute = ref('00')
+const inputEndHour = ref('10')
+const inputEndMinute = ref('30')
 const inputSubject = ref('')
 const inputTeacher = ref('')
 const exams = ref([])
 
 const hourOptions = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const minuteOptions = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
-const secondOptions = minuteOptions
 
-const selectedTime = computed(() => `${inputHour.value}:${inputMinute.value}:${inputSecond.value}`)
+const selectedTime = computed(() => `${inputStartHour.value}:${inputStartMinute.value} - ${inputEndHour.value}:${inputEndMinute.value}`)
+
+const selectedDuration = computed(() => {
+  const startMinutes = parseInt(inputStartHour.value) * 60 + parseInt(inputStartMinute.value)
+  const endMinutes = parseInt(inputEndHour.value) * 60 + parseInt(inputEndMinute.value)
+  const duration = endMinutes - startMinutes
+  return duration > 0 ? duration * 60 : 0
+})
 
 // 定時器ID
 let timeInterval = null
@@ -230,12 +237,8 @@ const updateTime = () => {
 // 啟動倒數計時
 const startCountdown = () => {
   if (!countdownActive.value) {
-    const timeParts = selectedTime.value.split(':')
-    const hours = parseInt(timeParts[0])
-    const minutes = parseInt(timeParts[1])
-    const seconds = parseInt(timeParts[2])
-    countdownSeconds.value = hours * 3600 + minutes * 60 + seconds
-    countdownActive.value = true
+    countdownSeconds.value = selectedDuration.value
+    countdownActive.value = selectedDuration.value > 0
   }
 }
 
@@ -342,18 +345,31 @@ onUnmounted(() => {
           <div class="input-grid">
             <div class="form-group time-select-group">
               <label><span v-html="displayTimeLabel"></span></label>
-              <div class="time-selects">
-                <select v-model="inputHour" class="input-field time-select">
-                  <option v-for="hour in hourOptions" :key="hour" :value="hour">{{ hour }}</option>
-                </select>
-                <span class="time-separator">:</span>
-                <select v-model="inputMinute" class="input-field time-select">
-                  <option v-for="minute in minuteOptions" :key="minute" :value="minute">{{ minute }}</option>
-                </select>
-                <span class="time-separator">:</span>
-                <select v-model="inputSecond" class="input-field time-select">
-                  <option v-for="second in secondOptions" :key="second" :value="second">{{ second }}</option>
-                </select>
+              <div class="time-period-box">
+                <div class="time-period-item">
+                  <span class="time-period-label">開始</span>
+                  <div class="time-selects">
+                    <select v-model="inputStartHour" class="input-field time-select">
+                      <option v-for="hour in hourOptions" :key="hour" :value="hour">{{ hour }}</option>
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select v-model="inputStartMinute" class="input-field time-select">
+                      <option v-for="minute in minuteOptions" :key="minute" :value="minute">{{ minute }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="time-period-item">
+                  <span class="time-period-label">結束</span>
+                  <div class="time-selects">
+                    <select v-model="inputEndHour" class="input-field time-select">
+                      <option v-for="hour in hourOptions" :key="hour" :value="hour">{{ hour }}</option>
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select v-model="inputEndMinute" class="input-field time-select">
+                      <option v-for="minute in minuteOptions" :key="minute" :value="minute">{{ minute }}</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -910,14 +926,39 @@ onUnmounted(() => {
 }
 
 .time-select {
-  width: 86px;
-  min-width: 86px;
+  width: 78px;
+  min-width: 78px;
   text-align: center;
 }
 
 .time-select-group {
   justify-self: start;
   max-width: 320px;
+}
+
+.time-period-box {
+  display: grid;
+  gap: 12px;
+}
+
+.time-period-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f7f8fb;
+}
+
+.app.dark .time-period-item {
+  background: #2a2d38;
+}
+
+.time-period-label {
+  width: 54px;
+  color: #556179;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .form-actions {
